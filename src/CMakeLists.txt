@@ -122,11 +122,9 @@ IF (WIN32)
 		ws2_32.lib
 	)
 ELSE()
-
-	SET (Extra_LIBS
-		pthread
-	)
-
+  IF (NOT ANDROID)
+    SET (Extra_LIBS pthread)
+  ENDIF()
 ENDIF()
 
 
@@ -161,6 +159,19 @@ if (NOT IOS)
   )
 ENDIF()
 
+IF (ANDROID)
+  SET(WITH_DAEMON false)
+
+  # This is tricky because it is only needed for arm64-v8a, mips64, x86_64
+  # It cannot find these libs in these cases, so it seems dirty
+  # TODO: Get some knowledge with -rpath option and CMake impl for RPATH and clean that !
+  SET(Explicit_LIBS
+    ${Pngt_LIB}
+    ${Jpgt_LIB}
+    ${Jnigraphics_LIB}
+    )
+  target_link_libraries(alpr ${Explicit_LIBS})
+ENDIF()
 
 # Compile the alprd library on Unix-based OS
 IF (WITH_DAEMON)
@@ -175,14 +186,14 @@ IF (WITH_DAEMON)
   FIND_PACKAGE( log4cplus REQUIRED )
 
   TARGET_LINK_LIBRARIES(alprd
-      ${OPENALPR_LIB}
-	  support
-      video
-	  curl
-	  ${OpenCV_LIBS}
-	  ${Tesseract_LIBRARIES}
-	  ${log4cplus_LIBRARIES}
-      ${Extra_LIBS}
+    ${OPENALPR_LIB}
+    support
+    video
+    curl
+    ${OpenCV_LIBS}
+    ${Tesseract_LIBRARIES}
+    ${log4cplus_LIBRARIES}
+    ${Extra_LIBS}
     )
 	
 ENDIF()
